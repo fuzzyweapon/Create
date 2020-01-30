@@ -12,6 +12,7 @@ apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'java'
 
 version = 'mc1.14.4_v0.2'
 group = 'com.simibubi.create'
@@ -70,13 +71,26 @@ repositories {
   }
 }
 
+ext {
+    forgeVersion = "1.14.4-28.2.0"
+    junitVersion ="5.5.1"
+}
+
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.14.4-28.2.0'
+    minecraft "net.minecraftforge:forge:$forgeVersion"
     
     // compile against the JEI API but do not include it at runtime
  	compileOnly fg.deobf("mezz.jei:jei-1.14.4:6.0.0.26:api")
   	// at runtime, use the full JEI jar
   	runtimeOnly fg.deobf("mezz.jei:jei-1.14.4:6.0.0.26")
+
+    // junit tests
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
+}
+
+test {
+    useJUnitPlatform()
 }
 
 jar {
