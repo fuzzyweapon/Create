@@ -22,8 +22,8 @@ sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = co
 
 minecraft {
     mappings channel: 'snapshot', version: '20200119-1.14.3'
-    
-    runs {		
+
+    runs {
 		client {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'info'
@@ -59,26 +59,26 @@ minecraft {
 }
 
 repositories {
-  maven {
-    // location of the maven that hosts JEI files
-    name = "Progwml6 maven"
-    url = "https://dvs1.progwml6.com/files/maven/"
-  }
-  maven {
-    // location of a maven mirror for JEI files, as a fallback
-    name = "ModMaven"
-    url = "https://modmaven.k-4u.nl"
-  }
+    maven {
+        // location of the maven that hosts JEI files
+        name = "Progwml6 maven"
+        url = "https://dvs1.progwml6.com/files/maven/"
+    }
+    maven {
+        // location of a maven mirror for JEI files, as a fallback
+        name = "ModMaven"
+        url = "https://modmaven.k-4u.nl"
+    }
 }
 
 ext {
     forgeVersion = "1.14.4-28.2.0"
-    junitVersion ="5.5.1"
+    junitVersion = "5.5.1"
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:$forgeVersion"
-    
+
     // compile against the JEI API but do not include it at runtime
  	compileOnly fg.deobf("mezz.jei:jei-1.14.4:6.0.0.26:api")
   	// at runtime, use the full JEI jar
@@ -86,6 +86,7 @@ dependencies {
 
     // junit tests
     testImplementation "org.junit.jupiter:junit-jupiter-api:$junitVersion"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:$junitVersion"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitVersion"
 }
 
@@ -96,12 +97,12 @@ test {
 jar {
     manifest {
         attributes([
-            "Specification-Title": "create",
-            "Specification-Vendor": "simibubi",
-            "Specification-Version": "1",
-            "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
-            "Implementation-Vendor" :"simibubi",
+            "Specification-Title"     : "create",
+            "Specification-Vendor"    : "simibubi",
+            "Specification-Version"   : "1",
+            "Implementation-Title"    : project.name,
+            "Implementation-Version"  : "${version}",
+            "Implementation-Vendor"   : "simibubi",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
