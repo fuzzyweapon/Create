@@ -1,9 +1,11 @@
 package com.simibubi.create.foundation.collision;
 
 
-import java.util.Objects;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
 
-import static java.lang.Math.*;
+import java.util.Objects;
 
 /**
  * Represents a {@link Quaternion} (Hamilton's hypercomplex numbers).
@@ -79,6 +81,26 @@ class Quaternion {
 
     static Quaternion realQuaternion(double scalar) {
         return new Quaternion(scalar, 0.0D, 0.0D, 0.0D);
+    }
+
+    private static Quaternion eulerAnglesToQuaternion(double roll, double pitch, double yaw) {
+        double cos_roll, cos_pitch, cos_yaw, sin_roll, sin_pitch, sin_yaw;
+        cos_roll = cos(0.5D * roll);
+        cos_pitch = cos(0.5D * pitch);
+        cos_yaw = cos(0.5D * yaw);
+        sin_roll = sin(0.5D * roll);
+        sin_pitch = sin(0.5D * pitch);
+        sin_yaw = sin(0.5D * yaw);
+
+        double cpcy = cos_pitch * cos_yaw;
+        double spsy = sin_pitch * sin_yaw;
+
+        return new Quaternion(
+                (cos_roll * cpcy) + (sin_roll * spsy),
+                (sin_roll * cpcy) - (cos_roll * spsy),
+                (cos_roll * sin_pitch * cos_yaw) + (sin_roll * cos_pitch * sin_yaw),
+                (cos_roll * cos_pitch * sin_yaw) - (sin_roll * sin_pitch * cos_yaw)
+        );
     }
 
     /**

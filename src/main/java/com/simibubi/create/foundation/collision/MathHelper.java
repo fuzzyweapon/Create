@@ -16,4 +16,5 @@ public class MathHelper {
         if (isNaN(difference)) return true;
         return (difference < 0 ? -difference : difference) <= epsilon;
     }
+
 }
