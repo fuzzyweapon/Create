@@ -39,25 +39,24 @@ import static com.simibubi.create.foundation.utility.AngleHelper.getShortestAngl
 
 public class ContraptionEntity extends Entity implements IEntityAdditionalSpawnData {
 
-    private static final DataParameter<Boolean> STALLED = EntityDataManager.createKey(ContraptionEntity.class,
-            DataSerializers.BOOLEAN);
-    private Contraption contraption;
-    private float initialAngle;
-    private BlockPos controllerPos;
-    private IControlContraption controllerTE;
-    private Vec3d motionBeforeStall;
-    final private boolean stationary;
-    private float prevYaw;
-    private float prevPitch;
-    private float prevRoll;
-
-    private float yaw;
-    private float pitch;
-    private float roll;
-
-    // Mounted Contraptions
-    private float targetYaw;
-    private float targetPitch;
+  private static final DataParameter<Boolean> STALLED = EntityDataManager.createKey(
+      ContraptionEntity.class,
+      DataSerializers.BOOLEAN);
+  public float prevYaw;
+  public float prevPitch;
+  public float prevRoll;
+  public float yaw;
+  public float pitch;
+  public float roll;
+  protected Contraption contraption;
+  protected float initialAngle;
+  protected BlockPos controllerPos;
+  protected IControlContraption controllerTE;
+  protected Vec3d motionBeforeStall;
+  protected boolean stationary;
+  // Mounted Contraptions
+  private float targetYaw;
+  private float targetPitch;
 
     public ContraptionEntity(EntityType<?> entityTypeIn, World worldIn) {
         super(entityTypeIn, worldIn);
