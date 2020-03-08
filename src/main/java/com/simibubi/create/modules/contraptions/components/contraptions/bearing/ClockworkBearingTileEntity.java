@@ -71,12 +71,12 @@ public class ClockworkBearingTileEntity extends KineticTileEntity implements IBe
 
 		if (!(hourHand != null && hourHand.isStalled())) {
 			float newAngle = hourAngle + getHourArmSpeed();
-			hourAngle = (float) (newAngle % 360);
+      hourAngle = newAngle % 360;
 		}
 
 		if (!(minuteHand != null && minuteHand.isStalled())) {
 			float newAngle = minuteAngle + getMinuteArmSpeed();
-			minuteAngle = (float) (newAngle % 360);
+      minuteAngle = newAngle % 360;
 		}
 
 		applyRotations();
@@ -185,11 +185,11 @@ public class ClockworkBearingTileEntity extends KineticTileEntity implements IBe
 	public void disassembleConstruct() {
 		if (!running)
 			return;
-		
+
 		hourAngle = 0;
 		minuteAngle = 0;
 		applyRotations();
-		
+
 		if (hourHand != null) {
 			hourHand.disassemble();
 		}

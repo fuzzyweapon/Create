@@ -1,7 +1,5 @@
 package com.simibubi.create.modules.contraptions.components.contraptions.bearing;
 
-import java.util.List;
-
 import com.simibubi.create.AllTileEntities;
 import com.simibubi.create.foundation.behaviour.ValueBoxTransform;
 import com.simibubi.create.foundation.behaviour.base.TileEntityBehaviour;
@@ -13,7 +11,7 @@ import com.simibubi.create.modules.contraptions.base.GeneratingKineticTileEntity
 import com.simibubi.create.modules.contraptions.components.contraptions.Contraption;
 import com.simibubi.create.modules.contraptions.components.contraptions.ContraptionEntity;
 import com.simibubi.create.modules.contraptions.components.contraptions.DirectionalExtenderScrollOptionSlot;
-
+import java.util.List;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.Direction;
@@ -218,7 +216,7 @@ public class MechanicalBearingTileEntity extends GeneratingKineticTileEntity imp
 		if (!(movedContraption != null && movedContraption.isStalled())) {
 			float angularSpeed = getAngularSpeed();
 			float newAngle = angle + angularSpeed;
-			angle = (float) (newAngle % 360);
+			angle = newAngle % 360;
 		}
 
 		applyRotation();
@@ -240,7 +238,7 @@ public class MechanicalBearingTileEntity extends GeneratingKineticTileEntity imp
 			Axis axis = getBlockState().get(BlockStateProperties.FACING).getAxis();
 			Direction direction = Direction.getFacingFromAxis(AxisDirection.POSITIVE, axis);
 			Vec3d vec = new Vec3d(1, 1, 1).scale(angle).mul(new Vec3d(direction.getDirectionVec()));
-			movedContraption.rotateTo(vec.x, vec.y, vec.z);
+			movedContraption.rotateTo(vec.x, vec.z, vec.y);
 		}
 	}
 
