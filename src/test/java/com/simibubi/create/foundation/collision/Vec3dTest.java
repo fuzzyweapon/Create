@@ -123,8 +123,8 @@ class Vec3dTest {
 
     private static Stream<Arguments> provideVec3dsForEquality() {
         double oneThird = 1.0D / 3.0D;
-        double oneThirdEps = oneThird + MathHelper.ABSOLUTE_EPSILOND;
-        double oneThirdHalfEps = oneThirdEps - (MathHelper.ABSOLUTE_EPSILOND / 2);
+        double oneThirdEps = oneThird + MathHelper.ABSOLUTE_EPSILON;
+        double oneThirdHalfEps = oneThirdEps - (MathHelper.ABSOLUTE_EPSILON / 2);
 
         return Stream.of(
                 Arguments.of(
@@ -168,8 +168,8 @@ class Vec3dTest {
 
     private static Stream<Arguments> provideVec3dsForNotEquality() {
         double oneThird = 1.0D / 3.0D;
-        double oneThirdEps = oneThird + MathHelper.ABSOLUTE_EPSILOND;
-        double oneThirdHalfEps = oneThirdEps + (MathHelper.ABSOLUTE_EPSILOND / 2);
+        double oneThirdEps = oneThird + MathHelper.ABSOLUTE_EPSILON;
+        double oneThirdHalfEps = oneThirdEps + (MathHelper.ABSOLUTE_EPSILON / 2);
 
         return Stream.of(
                 // negative coordinates

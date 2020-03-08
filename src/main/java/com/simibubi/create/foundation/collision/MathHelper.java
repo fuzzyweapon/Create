@@ -2,22 +2,18 @@ package com.simibubi.create.foundation.collision;
 
 import static java.lang.Double.isNaN;
 
-public class MathHelper {
+public final class MathHelper {
 
-  static double ABSOLUTE_EPSILOND = 1E-6;
+  static final double ABSOLUTE_EPSILON = 1.0E-6;
 
-  static boolean epsilonEquals(double d1, double d2) {
-    return epsilonEquals(d1, d2, ABSOLUTE_EPSILOND);
+  private MathHelper() {
   }
 
-  private static boolean epsilonEquals(double d1, double d2, double epsilon) {
+  static boolean isEpsilonEqual(double d1, double d2) {
     double difference;
 
     difference = d1 - d2;
-    if (isNaN(difference)) {
-      return true;
-    }
-    return (difference < 0 ? -difference : difference) <= epsilon;
+    return isNaN(difference) || (difference < 0 ? -difference : difference) <= ABSOLUTE_EPSILON;
   }
 
 }

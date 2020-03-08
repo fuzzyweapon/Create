@@ -1,16 +1,18 @@
 package com.simibubi.create.foundation.collision;
 
 
-import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 
+import java.text.MessageFormat;
 import java.util.Objects;
+import javax.annotation.Nonnull;
+
 
 /**
- * Represents a {@link Quaternion} (Hamilton's hypercomplex numbers).
+ * Represents a {@code Quaternion} (Hamilton's hypercomplex numbers)
  * <p>
- * We use Quaternions for smooth rotations, cleaner code, and more efficient algorithms compared to
+ * We use quaternions for smooth rotations, cleaner code, and more efficient algorithms compared to
  * matrices and Euler angles.  There are lots of generic benefits, but unique ones that push Create
  * to use them are the ability to smoothly interpolate when a rigid body is undergoing rotation and
  * translation (as well as simultaneously), and that it is much easier and computationally efficient
@@ -18,18 +20,19 @@ import java.util.Objects;
  */
 class Quaternion {
 
-  static final Quaternion ZERO = new Quaternion(0.0D, 0.0D, 0.0D, 0.0D);
+  static final         Quaternion ZERO               = new Quaternion(0.0D, 0.0D, 0.0D, 0.0D);
   // See Padé approximant.  This value is tuned to doubles.
-  private static final double HALF_ULP_THRESHOLD = 2.107342e-08;
+  private static final double     HALF_ULP_THRESHOLD = 2.107342e-08;
+  private static final double     HALF_ONE_DOUBLE    = 0.5D;
   // Scalar component (w)
-  private final double w;
+  private final        double     w;
   // Vector component
-  private final double x;
-  private final double y;
-  private final double z;
+  private final        double     x;
+  private final        double     y;
+  private final        double     z;
 
   /**
-   * Instantiates a new unit Quaternion.
+   * Instantiates a {@code new} unit quaternion.
    */
   Quaternion() {
     w = 1.0D;
@@ -39,12 +42,12 @@ class Quaternion {
   }
 
   /**
-   * Instantiates a new Quaternion.
+   * Instantiates a {@code new} Quaternion.
    *
-   * @param scalar the scalar
-   * @param x the x component of {@code this} {@link Quaternion}
-   * @param y the y component of {@code this} {@link Quaternion}
-   * @param z the z component of {@code this} {@link Quaternion}
+   * @param scalar the scalar component of {@code this} quaternion
+   * @param x the x component of {@code this} quaternion
+   * @param y the y component of {@code this} quaternion
+   * @param z the z component of {@code this} quaternion
    */
   Quaternion(double scalar, double x, double y, double z) {
     w = scalar;
@@ -54,12 +57,12 @@ class Quaternion {
   }
 
   /**
-   * Instantiates a new Quaternion.
+   * Instantiates a {@code new} Quaternion.
    *
-   * @param scalar the scalar component of {@code this} {@link Quaternion}
-   * @param vector the vector component of {@code this} {@link Quaternion}
+   * @param scalar the scalar component of {@code this} quaternion
+   * @param vector the vector component of {@code this} quaternion
    */
-  Quaternion(double scalar, Vec3d vector) {
+  Quaternion(double scalar, @Nonnull Vec3d vector) {
     w = scalar;
     x = vector.getX();
     y = vector.getY();
@@ -67,70 +70,110 @@ class Quaternion {
   }
 
   /**
-   * Instantiates a new Quaternion from a vector.
+   * Instantiates a {@code new} Quaternion from a vector.
    * <p>
-   * Aka, expressing a vector as a Quaternion.
+   * Aka, expressing a vector as a quaternion.
    *
    * @param vector the vector
    */
-  Quaternion(Vec3d vector) {
+  private Quaternion(@Nonnull Vec3d vector) {
     w = 1.0D;
     x = vector.getX();
     y = vector.getY();
     z = vector.getZ();
   }
 
+  @Nonnull
   static Quaternion realQuaternion(double scalar) {
     return new Quaternion(scalar, 0.0D, 0.0D, 0.0D);
   }
 
-  private static Quaternion eulerAnglesToQuaternion(double roll, double pitch, double yaw) {
-    double cos_roll, cos_pitch, cos_yaw, sin_roll, sin_pitch, sin_yaw;
-    cos_roll = cos(0.5D * roll);
-    cos_pitch = cos(0.5D * pitch);
-    cos_yaw = cos(0.5D * yaw);
-    sin_roll = sin(0.5D * roll);
-    sin_pitch = sin(0.5D * pitch);
-    sin_yaw = sin(0.5D * yaw);
+  @Nonnull
+  private static Quaternion eulerAnglesToQuaternion(
+      double roll, double pitch, double yaw
+                                                   ) {
+    double cosRoll, cosPitch, cosYaw, sinRoll, sinPitch, sinYaw;
+    cosRoll = Math.cos(HALF_ONE_DOUBLE * roll);
+    cosPitch = Math.cos(HALF_ONE_DOUBLE * pitch);
+    cosYaw = Math.cos(HALF_ONE_DOUBLE * yaw);
+    sinRoll = sin(HALF_ONE_DOUBLE * roll);
+    sinPitch = sin(HALF_ONE_DOUBLE * pitch);
+    sinYaw = sin(HALF_ONE_DOUBLE * yaw);
 
-    double cpcy = cos_pitch * cos_yaw;
-    double spsy = sin_pitch * sin_yaw;
+    double cosPitchCosYaw = cosPitch * cosYaw;
+    double sinPitchSinYaw = sinPitch * sinYaw;
 
     return new Quaternion(
-        (cos_roll * cpcy) + (sin_roll * spsy),
-        (sin_roll * cpcy) - (cos_roll * spsy),
-        (cos_roll * sin_pitch * cos_yaw) + (sin_roll * cos_pitch * sin_yaw),
-        (cos_roll * cos_pitch * sin_yaw) - (sin_roll * sin_pitch * cos_yaw)
+        (cosRoll * cosPitchCosYaw) + (sinRoll * sinPitchSinYaw),
+        (sinRoll * cosPitchCosYaw) - (cosRoll * sinPitchSinYaw),
+        (cosRoll * sinPitch * cosYaw) + (sinRoll * cosPitch * sinYaw),
+        (cosRoll * cosPitch * sinYaw) - (sinRoll * sinPitch * cosYaw)
     );
   }
 
   /**
-   * Normalizes {@code this} {@link Quaternion}.
+   * Normalizes {@code this} quaternion.
    * <p>
    * Mutates the quaternion argument.
    *
-   * @param real the {@link Quaternion} to be normalized
-   * @return real the normalized {@link Quaternion}
+   * @param quaternion the  to be normalized
+   *
+   * @return a {@code new} normalized
+   *
    * @see #normalized()
    */
-  static Quaternion normalized(Quaternion real) {
-    return real.normalized();
-  }
-
-  static Quaternion rotationQuaternion(Vec3d rotationAxis, double degrees) {
-    // degrees are oriented toward reducing cognitive load of using the method
-    // normally this should be radians/2 for total equation and consumers get half of the degrees expected
-    double radians = Math.toRadians(degrees);
-    return new Quaternion(cos(radians), rotationAxis.multiply(sin(radians)));
-  }
-
-  private static Quaternion abs(Quaternion quaternion) {
-    return new Quaternion(Math.abs(quaternion.w), Math.abs(quaternion.x), Math.abs(quaternion.y),
-        Math.abs(quaternion.z));
+  @Nonnull
+  static Quaternion normalized(@Nonnull Quaternion quaternion) {
+    return quaternion.normalized();
   }
 
   /**
-   * Get the scalar component of {@code this} {@link Quaternion}.
+   * Normalizes {@code this} quaternion.
+   * <p>
+   * This implementation uses Padé approximant first, but if the steps are too large, it falls back
+   * to the standard, but less efficient method that contains a {@link Math#sqrt(double a)}.
+   * <p>
+   * This makes it efficient enough to call to reduce magnitude and phase errors such as drift
+   * introduced by floating-point errors.
+   * <p>
+   * Note that normalization of a quaternion maintains its orientation but reduces its magnitude to
+   * 1.0.
+   *
+   * @return {@code new} normalized Quaternion
+   */
+  @Nonnull
+  final Quaternion normalized() {
+    double magnitudeSquared = lengthSquared();
+    Quaternion tempQuaternion;
+
+    // Requires small steps to stay within 0-2 or the more computationally expensive Math.sqrt is
+    //called.
+    tempQuaternion = Math.abs(1.0D - magnitudeSquared) < Quaternion.HALF_ULP_THRESHOLD ? multiply(
+        2.0D / (1.0D + magnitudeSquared)) : multiply(1.0D / sqrt(magnitudeSquared));
+
+    return new Quaternion(tempQuaternion.getW(), -tempQuaternion.getX(), -tempQuaternion.getY(),
+                          -tempQuaternion.getZ()
+    );
+  }
+
+  double lengthSquared() {
+    return magnitudeSquared();
+  }
+
+  /**
+   * Multiply {@code this} quaternion by a scalar.
+   *
+   * @param factor the factor to multiply {@code this} quaternion by
+   *
+   * @return a {@code new} Quaternion
+   */
+  @Nonnull
+  final Quaternion multiply(double factor) {
+    return new Quaternion(getW() * factor, getX() * factor, getY() * factor, getZ() * factor);
+  }
+
+  /**
+   * Get the scalar component of {@code this} quaternion.
    *
    * @return {@link #w} the scalar component
    */
@@ -139,7 +182,7 @@ class Quaternion {
   }
 
   /**
-   * Get the {@link #x} component of {@code this} {@link Quaternion}'s vector component.
+   * Get the {@link #x} component of {@code this} quaternion's vector component.
    *
    * @return {@link #x} vector component
    */
@@ -148,7 +191,7 @@ class Quaternion {
   }
 
   /**
-   * Get the {@link #y} component of {@code this} {@link Quaternion}'s vector component.
+   * Get the {@link #y} component of {@code this} quaternion's vector component.
    *
    * @return {@link #y} vector component
    */
@@ -157,7 +200,7 @@ class Quaternion {
   }
 
   /**
-   * Get the {@link #z} component of {@code this} {@link Quaternion}'s vector component.
+   * Get the {@link #z} component of {@code this} quaternion's vector component.
    *
    * @return {@link #z} vector component
    */
@@ -165,123 +208,43 @@ class Quaternion {
     return z;
   }
 
+  private double magnitudeSquared() {
+    return getW() * getW() + getX() * getX() + getY() * getY() + getZ() * getZ();
+  }
+
+  @Nonnull
+  static Quaternion rotationQuaternion(@Nonnull Vec3d rotationAxis, double degrees) {
+    // degrees are oriented toward reducing cognitive load of using the method
+    // normally this should be radians/2 for total equation and consumers get half of the degrees
+    // expected
+    double radians = Math.toRadians(degrees);
+    Vec3d vectorComponent = rotationAxis.multiply(sin(radians));
+    return new Quaternion(Math.cos(radians), vectorComponent);
+  }
+
+  @Nonnull
+  private static Vec3d multiply(@Nonnull Vec3d part) {
+    Quaternion identityQuaternion = new Quaternion();
+    Quaternion pureQuaternion = new Quaternion(0, part.getX(), part.getY(), part.getZ());
+    Quaternion result = identityQuaternion.multiply(pureQuaternion);
+    return new Vec3d(result.getX(), result.getY(), result.getZ());
+  }
+
   /**
-   * Normalizes {@code this} {@link Quaternion}.
+   * Get the cross-product {@code this} quaternion with another quaternion.
    * <p>
-   * This implementation uses Padé approximant first, but if the steps are too large, it falls back
-   * to the standard, but less efficient method that contains a {@link Math#sqrt(double a)}.
-   * <p>
-   * This makes it efficient enough to call to reduce magnitude and phase errors such as drift
-   * introduced by floating point errors.
-   * <p>
-   * Note that normalization of a quaternion maintains its orientation but reduces its magnitude to
-   * 1.0.
+   * Aka {@code this} quaternion X quaternion
    *
-   * @return {@link Quaternion} {@code new} normalized {@link Quaternion}
-   */
-  final Quaternion normalized() {
-    double magnitudeSquared = lengthSquared();
-    Quaternion tempQuaternion;
-
-    // Requires small steps to stay within 0-2 or the more computationally expensive Math.sqrt is called.
-    if (Math.abs(1.0D - magnitudeSquared) < HALF_ULP_THRESHOLD) {
-      tempQuaternion = this.multiply(2.0D / (1.0D + magnitudeSquared));
-    } else {
-      tempQuaternion = this.multiply(1.0D / sqrt(magnitudeSquared));
-    }
-
-    return new Quaternion(tempQuaternion.getW(), -tempQuaternion.getX(), -tempQuaternion.getY(),
-        -tempQuaternion.getZ());
-  }
-
-  final double lengthSquared() {
-    return w * w + x * x + y * y + z * z;
-  }
-
-  /**
-   * Multiply {@code this} {@link Quaternion} by scalar.
+   * @param quaternion the quaternion to cross with {@code this} quaternion
    *
-   * @param factor the factor to multiply {@code this} {@link Quaternion} by
-   * @return {@link Quaternion} a {@code new} {@link Quaternion} product
+   * @return the {@code new} Quaternion
    */
-  final Quaternion multiply(double factor) {
-    return new Quaternion(w * factor, x * factor, y * factor, z * factor);
-  }
-
-  /**
-   * Finds the inverse of a normalized {@link Quaternion} (aka unit quaternion).
-   * <p>
-   * Pre-condition:  {@code this} {@link Quaternion} is already normalized.
-   *
-   * @return {@link Quaternion} new {@link Quaternion} inverse
-   */
-  final Quaternion inverse() {
-    return conjugate().multiply(1.0D / lengthSquared());
-  }
-
-  /**
-   * Finds the length of {@code this} {@link Quaternion}.
-   *
-   * @return length length of {@code this} {@link Quaternion}
-   * @see #magnitude()
-   */
-  final double length() {
-    return magnitude();
-  }
-
-  /**
-   * Finds the magnitude of {@code this} {@link Quaternion}.
-   *
-   * @return magnitude magnitude of {@code this} {@link Quaternion}
-   */
-  final double magnitude() {
-    // |q| = sqrt(w2 + v·v)
-    // Given the dot product of a vector with itself does not change magnitude of the vector, the dot product will
-    // be the square of its magnitude.
-    return sqrt(w * w + x * x + y * y + z * z);
-  }
-
-  /**
-   * Add {@link Quaternion} to {@code this} {@link Quaternion}.
-   *
-   * @param quaternion {@link Quaternion} to add to {@code this} {@link Quaternion}
-   * @return {@link Quaternion} a {@code new} {@link Quaternion}
-   */
-  final Quaternion add(Quaternion quaternion) {
-    return new Quaternion(
-        w + quaternion.getW(),
-        x + quaternion.getX(),
-        y + quaternion.getY(),
-        z + quaternion.getZ()
-    );
-  }
-
-  /**
-   * Subtract {@link Quaternion} from {@code this} {@link Quaternion}.
-   *
-   * @param quaternion {@link Quaternion} to subtract from {@code this} {@link Quaternion}
-   * @return {@link Quaternion} a {@code new} {@link Quaternion}
-   */
-  final Quaternion subtract(Quaternion quaternion) {
-    return new Quaternion(
-        w - quaternion.getW(),
-        x - quaternion.getX(),
-        y - quaternion.getY(),
-        z - quaternion.getZ()
-    );
-  }
-
-  /**
-   * Multiplies {@code this} {@link Quaternion} with another {@link Quaternion}.
-   *
-   * @param quaternion the {@link Quaternion} to multiply with {@code this} {@link Quaternion}
-   * @return {@link Quaternion} a {@code new} {@link Quaternion} product
-   */
-  final Quaternion multiply(Quaternion quaternion) {
-    double w1 = w;
-    double x1 = x;
-    double y1 = y;
-    double z1 = z;
+  @Nonnull
+  final Quaternion multiply(@Nonnull Quaternion quaternion) {
+    double w1 = getW();
+    double x1 = getX();
+    double y1 = getY();
+    double z1 = getZ();
 
     double w2 = quaternion.getW();
     double x2 = quaternion.getX();
@@ -290,142 +253,224 @@ class Quaternion {
 
     // cross product - dot product...
     // (w1 * w2) - ([x1, y1, z1]·[x2, y2, z2])
+    double scalar = (w1 * w2) - ((x1 * x2) + (y1 * y2) + (z1 * z2));
+    double x3 = (w1 * x2) + (w2 * x1) + (y1 * z2) - (z1 * y2);
+    double y3 = (w1 * y2) + (w2 * y1) - (x1 * z2) + (z1 * x2);
+    double z3 = (w1 * z2) + (w2 * z1) + (x1 * y2) - (y1 * x2);
+    return new Quaternion(scalar, x3, y3, z3);
+  }
+
+  /**
+   * Finds the inverse of a normalized quaternion (aka a unit quaternion).
+   * <p>
+   * Pre-condition:  {@code this} quaternion is already normalized.
+   *
+   * @return {@code new} inverse
+   */
+  @Nonnull
+  final Quaternion inverse() {
+    Quaternion conjugate = conjugate();
+    double lengthSquared = lengthSquared();
+    return conjugate.multiply(1.0D / lengthSquared);
+  }
+
+  /**
+   * Finds the length of {@code this} quaternion.
+   *
+   * @return length length of {@code this} quaternion
+   *
+   * @see #magnitude()
+   */
+  final double length() {
+    return magnitude();
+  }
+
+  /**
+   * Finds the magnitude of {@code this} quaternion.
+   *
+   * @return magnitude magnitude of {@code this} quaternion
+   */
+  final double magnitude() {
+    // |q| = sqrt(w2 + v·v)
+    // Given the dot product of a vector with itself does not change magnitude of the vector, the
+    // dot product will
+    // be the square of its magnitude.
+    return sqrt(w * w + x * x + y * y + z * z);
+  }
+
+  /**
+   * Add another quaternion to {@code this} quaternion.
+   *
+   * @param quaternion to add to {@code this} quaternion
+   *
+   * @return a {@code new}
+   */
+  @Nonnull
+  final Quaternion add(@Nonnull Quaternion quaternion) {
     return new Quaternion(
-        (w1 * w2) - ((x1 * x2) + (y1 * y2) + (z1 * z2)),
-        (w1 * x2) + (w2 * x1) + (y1 * z2) - (z1 * y2),
-        (w1 * y2) + (w2 * y1) - (x1 * z2) + (z1 * x2),
-        (w1 * z2) + (w2 * z1) + (x1 * y2) - (y1 * x2)
+        getW() + quaternion.getW(),
+        getX() + quaternion.getX(),
+        getY() + quaternion.getY(),
+        getZ() + quaternion.getZ()
     );
   }
 
   /**
-   * Dot product of two {@link Quaternion}s.
+   * Dot product of two quaternions.
    *
    * @param quaternion the quaternion
-   * @return {@code double} the dot product of the two {@link Quaternion}s
+   *
+   * @return {@code double} the dot product of the two s
    */
-  double dotProduct(Quaternion quaternion) {
-    return w * quaternion.getW() + (x * quaternion.getX()) + (y * quaternion.getY()) + (z
-        * quaternion.getZ());
+  double dotProduct(@Nonnull Quaternion quaternion) {
+    return getW() * quaternion.getW() + (getX() * quaternion.getX()) + (getY() * quaternion.getY())
+           + (
+               getZ()
+               * quaternion.getZ()
+           );
   }
 
   /**
-   * Finds the conjugate of a {@link Quaternion}.
+   * Finds the conjugate of a {@code this} quaternion.
    *
-   * @return {@link Quaternion} new {@link Quaternion} conjugate
+   * @return {@code new} Quaternion that is the conjugate of {@code this} quaternion
    */
-  final Quaternion conjugate() {
-    return new Quaternion(w, -x, -y, -z);
+  @Nonnull
+  Quaternion conjugate() {
+    return new Quaternion(getW(), -getX(), -getY(), -getZ());
   }
 
-  public boolean equals(Object o) {
-    try {
-      Quaternion q = (Quaternion) o;
-      return this.equals(q);
-    } catch (NullPointerException | ClassCastException e1) {
-      return false;
-    }
+  @Nonnull
+  private Quaternion relativePrecisionError(@Nonnull Quaternion quaternion) {
+    Quaternion subExpression = subtract(quaternion).multiply(-1.0D);
+    Quaternion precisionError = subExpression.add(1.0D);
+    return Quaternion.absoluteValue(precisionError);
   }
 
-  public boolean equals(Quaternion quaternion) {
-    try {
-      if (!epsilonEquals(quaternion)) {
-        return (w == quaternion.w && x == quaternion.x && y == quaternion.y && z == quaternion.z);
-      } else {
-        return true;
-      }
-    } catch (NullPointerException e1) {
-      return false;
-    }
+  /**
+   * Subtract another quaternion from {@code this} quaternion.
+   *
+   * @param quaternion to subtract from {@code this} quaternion
+   *
+   * @return a {@code new}
+   */
+  @Nonnull
+  Quaternion subtract(@Nonnull Quaternion quaternion) {
+    return new Quaternion(
+        getW() - quaternion.getW(),
+        getX() - quaternion.getX(),
+        getY() - quaternion.getY(),
+        getZ() - quaternion.getZ()
+    );
   }
 
-  private boolean epsilonEquals(Quaternion quaternion) {
-    return epsilonEquals(quaternion, MathHelper.ABSOLUTE_EPSILOND);
-  }
-
-  private boolean epsilonEquals(Quaternion quaternion, double epsilon) {
-    if (!MathHelper.epsilonEquals(w, quaternion.w)) {
-      return false;
-    }
-    if (!MathHelper.epsilonEquals(x, quaternion.x)) {
-      return false;
-    }
-    if (!MathHelper.epsilonEquals(y, quaternion.y)) {
-      return false;
-    }
-    return MathHelper.epsilonEquals(z, quaternion.z);
-  }
-
-  private Quaternion relativeError(Quaternion quaternion) {
-    return abs(this.subtract(quaternion).multiply(-1.0D).add(1.0D));
-  }
-
+  @Nonnull
   private Quaternion add(double scalar) {
-    return new Quaternion(w + scalar, x + scalar, y + scalar, z + scalar);
+    return new Quaternion(getW() + scalar, getX() + scalar, getY() + scalar, getZ() + scalar);
+  }
+
+  @Nonnull
+  private static Quaternion absoluteValue(@Nonnull Quaternion quaternion) {
+    return new Quaternion(Math.abs(quaternion.getW()), Math.abs(quaternion.getX()), Math.abs(
+        quaternion.getY()),
+                          Math.abs(quaternion.getZ())
+    );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(w, x, y, z);
+    return Objects.hash(getW(), getX(), getY(), getZ());
   }
 
+  /**
+   * Determines if {@code this} quaternion is equal to another quaternion.
+   *
+   * @param o Object with which to determine equality
+   *
+   * @return boolean equality of two quaternions
+   *
+   * @throws ClassCastException if o is not a {@code Quaternion}
+   */
+  public boolean equals(Object o) {
+    return o instanceof Quaternion && isEqual(((Quaternion) o));
+  }
+
+  @Nonnull
   @Override
   public String toString() {
-    return "Quaternion{" +
-        "w=" + w +
-        ", x=" + x +
-        ", y=" + y +
-        ", z=" + z +
-        '}';
+    return MessageFormat
+               .format(
+                   "Quaternion'{' w={0}, x={1}, y={2}, z={3}'}'", getW(), getX(), getY(), getZ());
   }
 
+  @Nonnull
   private Quaternion floor() {
-    return new Quaternion(Math.floor(w), Math.floor(x), Math.floor(y), Math.floor(z));
+    return new Quaternion(Math.floor(getW()), Math.floor(getX()), Math.floor(getY()), Math.floor(
+        getZ()));
   }
 
   boolean isReal() {
-    return w != 0.0D && (x == 0.0D && y == 0.0D && z == 0.0D);
+    return getW() != 0.0D && getX() == 0.0D && getY() == 0.0D && getZ() == 0.0D;
   }
 
   boolean isPure() {
-    return w == 0.0D && (x != 0.0D || y != 0.0D || z != 0.0D);
+    return getW() == 0.0D && !isZero();
   }
 
-  /**
-   * Determines if {@code this} is a unit {@link Quaternion}.
-   * <p>
-   * Unit {@link Quaternion}s are identity {@link Quaternion}s.
-   *
-   * @return the boolean
-   */
-  boolean isUnit() {
-    boolean isVectorUnit = (x == 0.0D && y == 0.0D && Math.abs(z) == 1.0D) ||
-        (x == 0.0D && Math.abs(y) == 1.0D && z == 0.0D) ||
-        (Math.abs(x) == 1.0D && y == 0.0D && z == 0.0D);
+  private boolean isZero() {
+    return equals(Quaternion.ZERO);
+  }
 
-    if (w == 0.0D && isVectorUnit) {
-      return true;
+  private boolean isEqual(@Nonnull Quaternion quaternion) {
+    boolean isWEqual = ((Double) getW()).equals(quaternion.getW());
+    boolean isXEqual = ((Double) getX()).equals(quaternion.getX());
+    boolean isYEqual = ((Double) getY()).equals(quaternion.getY());
+    boolean isZEqual = ((Double) getZ()).equals(quaternion.getZ());
+
+    boolean isVecComponentEqual = isWEqual && isXEqual && isYEqual && isZEqual;
+    return equalsEpsilon(quaternion) || isVecComponentEqual;
+  }
+
+  private boolean equalsEpsilon(@Nonnull Quaternion quaternion) {
+    boolean isEqual = false;
+    boolean isWEqual = MathHelper.isEpsilonEqual(getW(), quaternion.getW());
+    if (isWEqual) {
+      boolean isXEqual = MathHelper.isEpsilonEqual(getX(), quaternion.getX());
+      if (isXEqual) {
+        boolean isYEqual = MathHelper.isEpsilonEqual(getY(), quaternion.getY());
+        if (isYEqual) {
+          isEqual = MathHelper.isEpsilonEqual(getZ(), quaternion.getZ());
+        }
+      }
     }
-    return Math.abs(w) == 1.0D && x == 0.0D && y == 0.0D && z == 0.0D;
+    return isEqual;
   }
 
   /**
-   * Rotate a {@link Vec3d} by {@code this} {@link Quaternion}.
+   * Determines if {@code this} quaternion is a unit quaternion (aka normalized) .
+   * <p>
+   * Unit quaternions are identity quaternions.
+   *
+   * @return boolean whether {@code this} quaternion is a unit quaternion
+   */
+  final boolean isUnit() {
+    // Because the square root of 1 is 1, we can skip the expensive square root.
+    return ((Double) lengthSquared()).equals(1.0D);
+  }
+
+  /**
+   * Rotate a {@link Vec3d} by {@code this} quaternion.
    *
    * @param vector the vector to be rotated
+   *
    * @return {@link Vec3d} a {@code new} rotated {@link Vec3d}
    */
   Vec3d rotate(Vec3d vector) {
-    Quaternion normalized = this.normalized();
+    Quaternion normalized = normalized();
     Quaternion vectorQuaternion = new Quaternion(0, vector.getX(), vector.getY(), vector.getZ());
     Quaternion newPureQuaternion = normalized.multiply(vectorQuaternion)
-        .multiply(normalized.inverse());
+                                             .multiply(normalized.inverse());
     return new Vec3d(newPureQuaternion.getX(), newPureQuaternion.getY(), newPureQuaternion.getZ());
   }
 
-  private Vec3d multiply(Vec3d part) {
-    Quaternion result = new Quaternion()
-        .multiply(new Quaternion(0, part.getX(), part.getY(), part.getZ()));
-    return new Vec3d(result.getX(), result.getY(), result.getZ());
-  }
 }
