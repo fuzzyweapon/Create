@@ -6,11 +6,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.commons.lang3.tuple.MutablePair;
@@ -198,53 +200,10 @@ public abstract class Contraption {
 		return true;
 	}
 
-	protected Pair<BlockInfo, TileEntity> capture(World world, BlockPos pos) {
-		BlockState blockstate = world.getBlockState(pos);
-		if (AllBlocks.SAW.typeOf(blockstate))
-			blockstate = blockstate.with(SawBlock.RUNNING, true);
-		if (blockstate.getBlock() instanceof ChestBlock)
-			blockstate = blockstate.with(ChestBlock.TYPE, ChestType.SINGLE);
-		if (AllBlocks.FLEXCRATE.typeOf(blockstate))
-			blockstate = blockstate.with(FlexcrateBlock.DOUBLE, false);
-		if (AllBlocks.CONTACT.typeOf(blockstate))
-			blockstate = blockstate.with(ContactBlock.POWERED, true);
-		CompoundNBT compoundnbt = getTileEntityNBT(world, pos);
-		TileEntity tileentity = world.getTileEntity(pos);
-		return Pair.of(new BlockInfo(pos, blockstate, compoundnbt), tileentity);
-	}
-
-	public static CompoundNBT getTileEntityNBT(World world, BlockPos pos) {
-		TileEntity tileentity = world.getTileEntity(pos);
-		CompoundNBT compoundnbt = null;
-		if (tileentity != null) {
-			compoundnbt = tileentity.write(new CompoundNBT());
-			compoundnbt.remove("x");
-			compoundnbt.remove("y");
-			compoundnbt.remove("z");
-		}
-		return compoundnbt;
-	}
-
-	public void add(BlockPos pos, Pair<BlockInfo, TileEntity> pair) {
-		BlockInfo captured = pair.getKey();
-		BlockPos localPos = pos.subtract(anchor);
-		BlockInfo blockInfo = new BlockInfo(localPos, captured.state, captured.nbt);
-
-		if (blocks.put(localPos, blockInfo) != null)
-			return;
-		bounds = bounds.union(new AxisAlignedBB(localPos));
-
-		TileEntity te = pair.getValue();
-		if (te != null && MountedStorage.canUseAsStorage(te))
-			storage.put(localPos, new MountedStorage(te));
-		if (captured.state.getBlock() instanceof IPortableBlock)
-			getActors().add(MutablePair.of(blockInfo, null));
-	}
-
 	public static Contraption fromNBT(World world, CompoundNBT nbt) {
 		String type = nbt.getString("Type");
 		Contraption contraption = AllContraptionTypes.fromType(type);
-		contraption.readNBT(world, nbt);
+    Objects.requireNonNull(contraption).readNBT(world, nbt);
 		return contraption;
 	}
 
@@ -259,7 +218,7 @@ public abstract class Contraption {
 					NBTUtil.readBlockState(comp.getCompound("Block")),
 					comp.contains("Data") ? comp.getCompound("Data") : null);
 			blocks.put(info.pos, info);
-			
+
 			if (world.isRemote) {
 				Block block = info.state.getBlock();
 				BlockRenderLayer renderLayer = block.getRenderLayer();
@@ -276,8 +235,9 @@ public abstract class Contraption {
 				tag.putInt("z", info.pos.getZ());
 
 				TileEntity te = TileEntity.create(tag);
-				te.setWorld(new WrappedWorld(world) {
+				Objects.requireNonNull(te).setWorld(new WrappedWorld(world) {
 
+				  @Nonnull
 					@Override
 					public BlockState getBlockState(BlockPos pos) {
 						if (!pos.equals(te.getPos()))
@@ -318,6 +278,56 @@ public abstract class Contraption {
 		anchor = NBTUtil.readBlockPos(nbt.getCompound("Anchor"));
 	}
 
+  protected Pair<BlockInfo, TileEntity> capture(World world, BlockPos pos) {
+    BlockState blockState = world.getBlockState(pos);
+    if (AllBlocks.SAW.typeOf(blockState)) {
+      blockState = blockState.with(SawBlock.RUNNING, true);
+    }
+    if (blockState.getBlock() instanceof ChestBlock) {
+      blockState = blockState.with(ChestBlock.TYPE, ChestType.SINGLE);
+    }
+    if (AllBlocks.FLEXCRATE.typeOf(blockState)) {
+      blockState = blockState.with(FlexcrateBlock.DOUBLE, false);
+    }
+    if (AllBlocks.CONTACT.typeOf(blockState)) {
+      blockState = blockState.with(ContactBlock.POWERED, true);
+    }
+    CompoundNBT compoundNBT = getTileEntityNBT(world, pos);
+    TileEntity tileEntity = world.getTileEntity(pos);
+    return Pair.of(new BlockInfo(pos, blockState, compoundNBT), tileEntity);
+  }
+
+  public static CompoundNBT getTileEntityNBT(World world, BlockPos pos) {
+    TileEntity tileEntity = world.getTileEntity(pos);
+    CompoundNBT compoundNBT = null;
+    if (tileEntity != null) {
+      compoundNBT = tileEntity.write(new CompoundNBT());
+      compoundNBT.remove("x");
+      compoundNBT.remove("y");
+      compoundNBT.remove("z");
+    }
+    return compoundNBT;
+  }
+
+  public void add(BlockPos pos, Pair<BlockInfo, TileEntity> pair) {
+    BlockInfo captured = pair.getKey();
+    BlockPos localPos = pos.subtract(anchor);
+    BlockInfo blockInfo = new BlockInfo(localPos, captured.state, captured.nbt);
+
+    if (blocks.put(localPos, blockInfo) != null) {
+      return;
+    }
+    bounds = bounds.union(new AxisAlignedBB(localPos));
+
+    TileEntity te = pair.getValue();
+    if (MountedStorage.canUseAsStorage(te)) {
+      storage.put(localPos, new MountedStorage(te));
+    }
+    if (captured.state.getBlock() instanceof IPortableBlock) {
+      getActors().add(MutablePair.of(blockInfo, null));
+    }
+  }
+
 	public CompoundNBT writeNBT() {
 		CompoundNBT nbt = new CompoundNBT();
 		nbt.putString("Type", getType().id);
@@ -335,7 +345,7 @@ public abstract class Contraption {
 		for (MutablePair<BlockInfo, MovementContext> actor : getActors()) {
 			CompoundNBT compound = new CompoundNBT();
 			compound.put("Pos", NBTUtil.writeBlockPos(actor.left.pos));
-			getMovement(actor.left.state).writeExtraData(actor.right);
+      Objects.requireNonNull(getMovement(actor.left.state)).writeExtraData(actor.right);
 			actor.right.writeToNBT(compound);
 			actorsNBT.add(compound);
 		}
@@ -377,7 +387,8 @@ public abstract class Contraption {
 		removeBlocksFromWorld(world, offset, (pos, state) -> false);
 	}
 
-	public void removeBlocksFromWorld(IWorld world, BlockPos offset, BiPredicate<BlockPos, BlockState> customRemoval) {
+  protected void removeBlocksFromWorld(IWorld world, BlockPos offset,
+                                       BiPredicate<BlockPos, BlockState> customRemoval) {
 		storage.values().forEach(MountedStorage::empty);
 		for (BlockInfo block : blocks.values()) {
 			BlockPos add = block.pos.add(anchor).add(offset);
@@ -388,8 +399,8 @@ public abstract class Contraption {
 		}
 	}
 
-	public void disassemble(World world, BlockPos offset, Vec3d rotation,
-			BiPredicate<BlockPos, BlockState> customPlacement) {
+  protected void disassemble(World world, BlockPos offset, Vec3d rotation,
+                             BiPredicate<BlockPos, BlockState> customPlacement) {
 		stop(world);
 
 		StructureTransform transform = new StructureTransform(offset, rotation);
@@ -446,7 +457,7 @@ public abstract class Contraption {
 		for (MutablePair<BlockInfo, MovementContext> pair : actors) {
 			MovementContext context = new MovementContext(world, pair.left);
 			context.contraption = this;
-			getMovement(pair.left.state).startMoving(context);
+      Objects.requireNonNull(getMovement(pair.left.state)).startMoving(context);
 			pair.setRight(context);
 		}
 	}
