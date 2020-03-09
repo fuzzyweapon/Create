@@ -1,8 +1,8 @@
 package com.simibubi.create.foundation.collision;
 
+import com.simibubi.create.foundation.utility.NotImplementedException;
 import com.simibubi.create.modules.contraptions.components.contraptions.ContraptionEntity;
 import javax.annotation.Nonnull;
-import net.minecraft.util.math.Vec3d;
 
 public class CollisionManager {
 
@@ -13,24 +13,19 @@ public class CollisionManager {
   }
 
   @Nonnull
-  public Vec3d tryTranslation(
-      double roll, double pitch, double yaw, double prevRoll,
-      double prevPitch,
-      double prevYaw
-                             ) {
-    return null;
+  public Vec3d tryTranslation(double prevX, double prevY, double prevZ, double x,
+                              double y, double z) {
+    try {
+      throw new NotImplementedException();
+    } catch (NotImplementedException e) {
+      e.printStackTrace();
+    }
+    return Vec3d.ZERO;
   }
 
-  public Vec3d tryRotation(
-      double roll,
-      double pitch,
-      double yaw,
-      double roll1,
-      double pitch1,
-      double yaw1
-                          ) {
+  public Vec3d tryRotation(double prevRoll, double prevPitch, double prevYaw, double roll,
+                           double pitch,
+                           double yaw) {
     return null;
-
   }
-
 }

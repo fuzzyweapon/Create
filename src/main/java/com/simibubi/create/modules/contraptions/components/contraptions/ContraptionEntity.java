@@ -29,6 +29,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.feature.template.Template;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -36,33 +37,34 @@ import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
 import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.fml.network.PacketDistributor;
 import org.apache.commons.lang3.tuple.MutablePair;
-import net.minecraft.world.gen.feature.template.Template;
 
 public class ContraptionEntity extends Entity implements IEntityAdditionalSpawnData {
 
   private static final DataParameter<Boolean> STALLED = EntityDataManager.createKey(
       ContraptionEntity.class,
       DataSerializers.BOOLEAN);
-  public float prevYaw;
-  public float prevPitch;
-  public float prevRoll;
-  public float yaw;
+  private float prevYaw;
+  private float prevPitch;
+  private float prevRoll;
+  private float yaw;
   public float pitch;
-  public float roll;
+  private float roll;
   protected Contraption contraption;
-  protected float initialAngle;
-  protected BlockPos controllerPos;
-  protected IControlContraption controllerTE;
-  protected Vec3d motionBeforeStall;
-  protected boolean stationary;
+  private float initialAngle;
+  private BlockPos controllerPos;
+  private IControlContraption controllerTE;
+  private Vec3d motionBeforeStall;
+  private boolean stationary;
   // Mounted Contraptions
   private float targetYaw;
   private float targetPitch;
+  private CollisionManager collisionManager;
 
   public ContraptionEntity(EntityType<?> entityTypeIn, World worldIn) {
     super(entityTypeIn, worldIn);
     motionBeforeStall = Vec3d.ZERO;
     stationary = entityTypeIn == AllEntities.STATIONARY_CONTRAPTION.type;
+    collisionManager = new CollisionManager(this);
   }
 
   public static ContraptionEntity createMounted(World world, Contraption contraption,
@@ -248,10 +250,8 @@ public class ContraptionEntity extends Entity implements IEntityAdditionalSpawnD
     }
 
     private void translate(double x, double y, double z) {
-      CollisionManager collisionManager = new CollisionManager(this);
-
-      Vec3d translationProgress =
-          collisionManager.tryTranslation(prevRoll, prevPitch, prevYaw, roll, pitch, yaw);
+      com.simibubi.create.foundation.collision.Vec3d translationProgress =
+          collisionManager.tryTranslation(posX, this.posY, posZ, x, y, z);
 
       double destX = posX + translationProgress.getX();
       double destY = posY + translationProgress.getY();
@@ -291,25 +291,10 @@ public class ContraptionEntity extends Entity implements IEntityAdditionalSpawnD
         translate(x - posX, y - posY, z - posZ);
     }
 
-    private void rotate(double roll, double pitch, double yaw) {
-
-      CollisionManager collisionManager = new CollisionManager(this);
-
-      Vec3d rotationProgress =
-          collisionManager.tryRotation(this.roll, this.pitch, this.yaw, roll, pitch, yaw);
-
-      // x-axis rotation
-      this.roll += rotationProgress.x;
-      // y-axis rotation
-      this.pitch += rotationProgress.y;
-      // z-axis rotation
-      this.yaw += rotationProgress.z;
-    }
-
 	@Override
 	public void setPosition(double x, double y, double z) {
 		Entity e = getRidingEntity();
-		if (e != null && e instanceof AbstractMinecartEntity) {
+    if (e instanceof AbstractMinecartEntity) {
 			Entity riding = e;
 			while (riding.getRidingEntity() != null)
 				riding = riding.getRidingEntity();
@@ -329,6 +314,18 @@ public class ContraptionEntity extends Entity implements IEntityAdditionalSpawnD
         setBoundingBox(cbox.offset(x, y, z));
 		}
 	}
+
+  private void rotate(double roll, double pitch, double yaw) {
+    com.simibubi.create.foundation.collision.Vec3d rotationProgress =
+        collisionManager.tryRotation(this.roll, this.pitch, this.yaw, roll, pitch, yaw);
+
+    // x-axis rotation
+    this.roll += rotationProgress.getX();
+    // y-axis rotation
+    this.pitch += rotationProgress.getY();
+    // z-axis rotation
+    this.yaw += rotationProgress.getZ();
+  }
 
 	public static float pitchFromVector(Vec3d vec) {
 		return (float) ((Math.acos(vec.y)) / Math.PI * 180);
