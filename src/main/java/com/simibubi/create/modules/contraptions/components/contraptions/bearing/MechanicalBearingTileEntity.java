@@ -238,7 +238,7 @@ public class MechanicalBearingTileEntity extends GeneratingKineticTileEntity imp
 			Axis axis = getBlockState().get(BlockStateProperties.FACING).getAxis();
 			Direction direction = Direction.getFacingFromAxis(AxisDirection.POSITIVE, axis);
 			Vec3d vec = new Vec3d(1, 1, 1).scale(angle).mul(new Vec3d(direction.getDirectionVec()));
-			movedContraption.rotateTo(vec.x, vec.z, vec.y);
+			movedContraption.rotateTo(vec.x, vec.y, vec.z);
 		}
 	}
 

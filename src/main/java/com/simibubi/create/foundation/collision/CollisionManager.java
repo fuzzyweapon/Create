@@ -23,9 +23,15 @@ public class CollisionManager {
     return Vec3d.ZERO;
   }
 
-  public Vec3d tryRotation(double prevRoll, double prevPitch, double prevYaw, double roll,
-                           double pitch,
-                           double yaw) {
+  private double calculateConvergence(final Vec3d contraptionEntityMotion,
+                                      final Vec3d neighborMotion) {
+
+    return contraptionEntityMotion.dotProduct(neighborMotion);
+  }
+
+  public Vec3d tryRotation(double prevRoll, double prevYaw, double prevPitch,
+                           double roll, double yaw, double pitch) {
     return null;
   }
+
 }

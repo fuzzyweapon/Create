@@ -259,9 +259,9 @@ public class ContraptionEntity extends Entity implements IEntityAdditionalSpawnD
       setPosition(destX, destY, destZ);
     }
 
-  public void rotateTo(double roll, double pitch, double yaw) {
-    rotate(getShortestAngleDiff(this.roll, roll), getShortestAngleDiff(this.pitch, pitch),
-           getShortestAngleDiff(this.yaw, yaw)
+  public void rotateTo(double roll, double yaw, double pitch) {
+    rotate(getShortestAngleDiff(this.roll, roll), getShortestAngleDiff(this.yaw, yaw),
+           getShortestAngleDiff(this.pitch, pitch)
           );
   }
 
@@ -315,16 +315,16 @@ public class ContraptionEntity extends Entity implements IEntityAdditionalSpawnD
 		}
 	}
 
-  private void rotate(double roll, double pitch, double yaw) {
+  private void rotate(double roll, double yaw, double pitch) {
     com.simibubi.create.foundation.collision.Vec3d rotationProgress =
-        collisionManager.tryRotation(this.roll, this.pitch, this.yaw, roll, pitch, yaw);
+        collisionManager.tryRotation(this.roll, this.yaw, this.pitch, roll, yaw, pitch);
 
     // x-axis rotation
     this.roll += rotationProgress.getX();
     // y-axis rotation
-    this.pitch += rotationProgress.getY();
+    this.yaw += rotationProgress.getY();
     // z-axis rotation
-    this.yaw += rotationProgress.getZ();
+    this.pitch += rotationProgress.getZ();
   }
 
 	public static float pitchFromVector(Vec3d vec) {
