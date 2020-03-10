@@ -17,10 +17,10 @@ public final class Vec3d implements IPosition {
   /**
    * The constant ZERO.
    */
-  public static final Vec3d  ZERO = new Vec3d(0.0D, 0.0D, 0.0D);
-  private final       double x;
-  private final       double y;
-  private final       double z;
+  public static final Vec3d ZERO = new Vec3d(0.0D, 0.0D, 0.0D);
+  private double x;
+  private double y;
+  private double z;
 
   /**
    * Instantiates a new {@link Vec3d}.
@@ -33,6 +33,12 @@ public final class Vec3d implements IPosition {
     this.x = x;
     this.y = y;
     this.z = z;
+  }
+
+  public Vec3d(final net.minecraft.util.math.Vec3d vector) {
+    this.x = vector.getX();
+    this.y = vector.getY();
+    this.z = vector.getZ();
   }
 
   /**
