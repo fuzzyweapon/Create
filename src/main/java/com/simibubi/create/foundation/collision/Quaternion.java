@@ -88,26 +88,27 @@ class Quaternion {
     return new Quaternion(scalar, 0.0D, 0.0D, 0.0D);
   }
 
+  // TODO: Test this.  It could be very wrong.
   @Nonnull
-  private static Quaternion eulerAnglesToQuaternion(
-      double roll, double pitch, double yaw
-                                                   ) {
-    double cosRoll, cosPitch, cosYaw, sinRoll, sinPitch, sinYaw;
+  static Quaternion eulerAnglesToQuaternion(
+      double roll, double yaw, double pitch
+                                           ) {
+    double cosRoll, cosYaw, cosPitch, sinRoll, sinYaw, sinPitch;
     cosRoll = Math.cos(HALF_ONE_DOUBLE * roll);
-    cosPitch = Math.cos(HALF_ONE_DOUBLE * pitch);
     cosYaw = Math.cos(HALF_ONE_DOUBLE * yaw);
+    cosPitch = Math.cos(HALF_ONE_DOUBLE * pitch);
     sinRoll = sin(HALF_ONE_DOUBLE * roll);
-    sinPitch = sin(HALF_ONE_DOUBLE * pitch);
     sinYaw = sin(HALF_ONE_DOUBLE * yaw);
+    sinPitch = sin(HALF_ONE_DOUBLE * pitch);
 
-    double cosPitchCosYaw = cosPitch * cosYaw;
-    double sinPitchSinYaw = sinPitch * sinYaw;
+    double cosYawCosPitch = cosYaw * cosPitch;
+    double sinYawSinPitch = sinYaw * sinPitch;
 
     return new Quaternion(
-        (cosRoll * cosPitchCosYaw) + (sinRoll * sinPitchSinYaw),
-        (sinRoll * cosPitchCosYaw) - (cosRoll * sinPitchSinYaw),
-        (cosRoll * sinPitch * cosYaw) + (sinRoll * cosPitch * sinYaw),
-        (cosRoll * cosPitch * sinYaw) - (sinRoll * sinPitch * cosYaw)
+        (cosRoll * cosYawCosPitch) + (sinRoll * sinYawSinPitch),
+        (sinRoll * cosYawCosPitch) - (cosRoll * sinYawSinPitch),
+        (cosRoll * sinYaw * cosPitch) + (sinRoll * cosYaw * sinPitch),
+        (cosRoll * cosYaw * sinPitch) - (sinRoll * sinYaw * cosPitch)
     );
   }
 
@@ -223,7 +224,7 @@ class Quaternion {
   }
 
   @Nonnull
-  private static Vec3d multiply(@Nonnull Vec3d part) {
+  static Vec3d multiply(@Nonnull Vec3d part) {
     Quaternion identityQuaternion = new Quaternion();
     Quaternion pureQuaternion = new Quaternion(0, part.getX(), part.getY(), part.getZ());
     Quaternion result = identityQuaternion.multiply(pureQuaternion);

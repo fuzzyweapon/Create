@@ -35,10 +35,22 @@ public final class Vec3d implements IPosition {
     this.z = z;
   }
 
-  public Vec3d(final net.minecraft.util.math.Vec3d vector) {
+  Vec3d(final net.minecraft.util.math.Vec3d vector) {
     this.x = vector.getX();
     this.y = vector.getY();
     this.z = vector.getZ();
+  }
+
+  public static net.minecraft.util.math.Vec3d toVec3d(Vec3d vec3d) {
+    return new net.minecraft.util.math.Vec3d(vec3d.getX(), vec3d.getY(), vec3d.getZ());
+  }
+
+  public static Vec3d fromVec3d(net.minecraft.util.math.Vec3d vec3d) {
+    return new Vec3d(vec3d);
+  }
+
+  public static Vec3d fromVec3i(final net.minecraft.util.math.Vec3i vec3i) {
+    return new Vec3d(vec3i.getX(), vec3i.getY(), vec3i.getZ());
   }
 
   /**
@@ -87,7 +99,7 @@ public final class Vec3d implements IPosition {
    */
   @Nonnull
   public final Vec3d add(double x, double y, double z) {
-    return new Vec3d(getX() + x, this.y + y, this.z + z);
+    return new Vec3d(getX() + x, getY() + y, getZ() + z);
   }
 
   /**
@@ -255,6 +267,10 @@ public final class Vec3d implements IPosition {
            ", y=" + y +
            ", z=" + z +
            '}';
+  }
+
+  net.minecraft.util.math.Vec3d toMCVec3d() {
+    return new net.minecraft.util.math.Vec3d(getX(), getY(), getZ());
   }
 
 }

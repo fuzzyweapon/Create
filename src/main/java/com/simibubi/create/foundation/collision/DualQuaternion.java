@@ -18,13 +18,13 @@ import javax.annotation.Nullable;
  */
 public class DualQuaternion {
 
-  public static final  DualQuaternion ZERO                               = new DualQuaternion(Quaternion.ZERO, Quaternion.ZERO);
-  private static final double         FLOATING_POINT_PRECISION_TOLERANCE = 0.000001D;
+  public static final DualQuaternion ZERO = new DualQuaternion(Quaternion.ZERO, Quaternion.ZERO);
+  public static final double FLOATING_POINT_PRECISION_TOLERANCE = 0.000001D;
   @Nullable
-  private final        Double         w;
+  public final Double w;
   @Nonnull
-  private      final   Quaternion     real;
-  private       final  Quaternion     dual;
+  public final Quaternion real;
+  public final Quaternion dual;
 
   /**
    * Instantiates a new Dual quaternion.
@@ -41,7 +41,7 @@ public class DualQuaternion {
    * @param real the real component - rotation {@link Quaternion}
    * @param dual the dual component
    */
-  private DualQuaternion(@Nonnull Quaternion real, Quaternion dual) {
+  public DualQuaternion(@Nonnull Quaternion real, Quaternion dual) {
     this.real = Quaternion.normalized(real);
     this.dual = dual;
     w = null;
@@ -49,10 +49,11 @@ public class DualQuaternion {
 
   /**
    * Instantiates a new Dual quaternion.
-   *  @param quaternion the quaternion
+   *
+   * @param quaternion the quaternion
    * @param vector the vector
    */
-  private DualQuaternion(@Nonnull Quaternion quaternion, @Nonnull Vec3d vector) {
+  public DualQuaternion(@Nonnull Quaternion quaternion, @Nonnull Vec3d vector) {
     real = Quaternion.normalized(quaternion);
     Quaternion realsCrossProduct = new Quaternion(0.0D, vector).multiply(real);
     dual = realsCrossProduct.multiply(0.5D);
@@ -60,12 +61,12 @@ public class DualQuaternion {
   }
 
   @Nonnull
-  private DualQuaternion multiply(double factor) {
+  public DualQuaternion multiply(double factor) {
     return new DualQuaternion(real.multiply(factor), dual.multiply(factor));
   }
 
   @Nonnull
-  private DualQuaternion multiply(@Nonnull DualQuaternion dualQuaternion) {
+  public DualQuaternion multiply(@Nonnull DualQuaternion dualQuaternion) {
     // Multiply left to right
     return new DualQuaternion(
         dualQuaternion.getReal().multiply(real),
@@ -75,13 +76,22 @@ public class DualQuaternion {
   }
 
   @Nonnull
-  private DualQuaternion add(@Nonnull DualQuaternion dualQuaternion) {
+  public Quaternion getReal() {
+    return real;
+  }
+
+  public Quaternion getDual() {
+    return dual;
+  }
+
+  @Nonnull
+  public DualQuaternion add(@Nonnull DualQuaternion dualQuaternion) {
     return new DualQuaternion(real.add(dualQuaternion.getReal()), dual.add(
         dualQuaternion.getDual()));
   }
 
   @Nonnull
-  private DualQuaternion normalize() {
+  public DualQuaternion normalize() {
     double mag = magnitude();
     assert (mag > DualQuaternion.FLOATING_POINT_PRECISION_TOLERANCE);
 
@@ -89,17 +99,32 @@ public class DualQuaternion {
     return new DualQuaternion(real.multiply(factor), dual.multiply(factor));
   }
 
-  private double magnitude() {
+  public double magnitude() {
     return real.dotProduct(real);
   }
 
-  private double dotProduct(@Nonnull DualQuaternion quaternion) {
+  public double dotProduct(@Nonnull DualQuaternion quaternion) {
     return real.dotProduct(quaternion.getReal());
   }
 
   @Nonnull
-  private DualQuaternion conjugate() {
+  public DualQuaternion conjugate() {
     return new DualQuaternion(real.conjugate(), dual.conjugate());
+  }
+
+  @Nonnull
+  public Vec3d extractTranslationVector() {
+    Quaternion translation = (dual.multiply(2.0D)).multiply(real.conjugate());
+    return new Vec3d(translation.getX(), translation.getY(), translation.getZ());
+  }
+
+  public Double getW() {
+    return w;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(w, real, dual);
   }
 
   /**
@@ -118,38 +143,14 @@ public class DualQuaternion {
   /**
    *
    */
-  private boolean isEqual(@Nonnull DualQuaternion dualQuaternion) {
+  public boolean isEqual(@Nonnull DualQuaternion dualQuaternion) {
     return real.equals(dualQuaternion.getReal()) && dual.equals(dualQuaternion.getDual());
-  }
-
-  @Nonnull
-  private Vec3d extractTranslationVector() {
-    Quaternion translation = (dual.multiply(2.0D)).multiply(real.conjugate());
-    return new Vec3d(translation.getX(), translation.getY(), translation.getZ());
-  }
-
-  private Double getW() {
-    return w;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(w, real, dual);
   }
 
   @Nonnull
   @Override
   public String toString() {
     return MessageFormat.format("DualQuaternion'{'w={0}, real={1}, dual={2}'}'", w, real, dual);
-  }
-
-  @Nonnull
-  private Quaternion getReal() {
-    return real;
-  }
-
-  private Quaternion getDual() {
-    return dual;
   }
 
 }

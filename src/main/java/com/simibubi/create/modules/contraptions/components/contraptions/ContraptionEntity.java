@@ -43,12 +43,12 @@ public class ContraptionEntity extends Entity implements IEntityAdditionalSpawnD
   private static final DataParameter<Boolean> STALLED = EntityDataManager.createKey(
       ContraptionEntity.class,
       DataSerializers.BOOLEAN);
-  private float prevYaw;
-  private float prevPitch;
-  private float prevRoll;
-  private float yaw;
+  public float prevYaw;
+  public float prevPitch;
+  public float prevRoll;
+  public float yaw;
   public float pitch;
-  private float roll;
+  public float roll;
   protected Contraption contraption;
   private float initialAngle;
   private BlockPos controllerPos;
@@ -250,13 +250,11 @@ public class ContraptionEntity extends Entity implements IEntityAdditionalSpawnD
     }
 
     private void translate(double x, double y, double z) {
-      com.simibubi.create.foundation.collision.Vec3d translationProgress =
-          collisionManager.tryTranslation(posX, this.posY, posZ, x, y, z);
+      Vec3d translationProgress =
+          collisionManager.maybeTranslate(posX, posY, posZ, x, y, z);
 
-      double destX = posX + translationProgress.getX();
-      double destY = posY + translationProgress.getY();
-      double destZ = posZ + translationProgress.getZ();
-      setPosition(destX, destY, destZ);
+      setPosition(posX + translationProgress.getX(), posY + translationProgress.getY(),
+                  posZ + translationProgress.getZ());
     }
 
   public void rotateTo(double roll, double yaw, double pitch) {
@@ -316,15 +314,15 @@ public class ContraptionEntity extends Entity implements IEntityAdditionalSpawnD
 	}
 
   private void rotate(double roll, double yaw, double pitch) {
-    com.simibubi.create.foundation.collision.Vec3d rotationProgress =
-        collisionManager.tryRotation(this.roll, this.yaw, this.pitch, roll, yaw, pitch);
+    Vec3d rotationProgress =
+        collisionManager.maybeRotate(this.roll, this.yaw, this.pitch, roll, yaw, pitch);
 
     // x-axis rotation
-    this.roll += rotationProgress.getX();
+    this.roll += (float) rotationProgress.getX();
     // y-axis rotation
-    this.yaw += rotationProgress.getY();
+    this.yaw += (float) rotationProgress.getY();
     // z-axis rotation
-    this.pitch += rotationProgress.getZ();
+    this.pitch += (float) rotationProgress.getZ();
   }
 
 	public static float pitchFromVector(Vec3d vec) {

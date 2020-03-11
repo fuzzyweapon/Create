@@ -542,4 +542,8 @@ class QuaternionTest {
     assertEquals(vCopy, vector, METHOD_NOT_IMMUTABLE);
   }
 
+  @Test
+  void eulerAnglesToQuaternion() {
+  }
+
 }
