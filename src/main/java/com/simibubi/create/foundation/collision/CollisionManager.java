@@ -63,6 +63,11 @@ public class CollisionManager {
             minimumTranslationVector = intersectData.getRight();
 
         if (minimumTranslationVector != null) {
+          if (neighbor instanceof ContraptionEntity) {
+            ContraptionEntity neighborContraptionEntity = (ContraptionEntity) neighbor;
+            neighborContraptionEntity.setMotion(Vec3d.ZERO);
+            neighborContraptionEntity.getContraption().stalled = true;
+          }
           contraptionEntity.setMotion(Vec3d.ZERO);
           contraptionEntity.getContraption().stalled = true;
           return new Vec3d(x, y, z).add(neighbor.posX, neighbor.posY, neighbor.posZ);
